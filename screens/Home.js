@@ -1,12 +1,24 @@
-import React from "react";
-import { View, Text } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableWithoutFeedback } from "react-native";
 import { StyleSheet } from "react-native-web";
+import { getAuth, signOut } from "@firebase/auth";
+import { Animated } from "react-native";
+
+const auth = getAuth();
 
 export default function Home() {
-  const text = "Hello"
+  async function signOut(){
+    auth.signOut();
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Home</Text>
+      <TouchableWithoutFeedback onPress={signOut}>
+        <Animated.View style={styles.button}>
+          <Text style={styles.buttonText}>Sign Out</Text>
+        </Animated.View>
+      </TouchableWithoutFeedback>
     </View>
   );
 }
@@ -18,23 +30,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  textBoxes: {
-    maxWidth: '90%',
-    minWidth: '90%',
-    fontSize: 18,
-    padding: 12,
-    borderColor: '#4D5B9E',
-    borderWidth: 0.2,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
   button: {
     //flex: 1,
     backgroundColor: '#4D5B9E',
     padding: 10,
     borderRadius: 5,
     margin: 10,
-    elevation: 5
+    elevation: 5,
+    cursor: 'pointer'
   },
   buttonText: {
     color: '#fff',
@@ -49,11 +52,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontWeight: 800,
   },
-  logo: {
-    width: 80 ,
-    height: 80,
-  },
-  buttons: {
-    flexDirection: 'row'
-  }
 });

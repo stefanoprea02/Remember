@@ -6,6 +6,7 @@ import Feather from "react-native-vector-icons/Feather";
 
 import Home from "../screens/Home";
 import SliderBar from "../screens/SliderBar";
+import Dailies from "../screens/Dailies";
 
 const Tab = createBottomTabNavigator();
 
@@ -14,16 +15,19 @@ export default function UserStack() {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={{
-          headerShown: false,
+          headerShown: true,
           "tabBarActiveTintColor": "#293264",
           "tabBarInactiveTintColor": "gray",
           "tabBarLabelStyle": {
               "fontSize": 14,
-              "fontWeight": "bold"
+              "fontWeight": "bold",
+              "marginBottom": 4
           },
           "tabBarStyle": [
               {
-                "display": "flex"
+                "display": "flex",
+                "padding": 5,
+                "height": 55
               },
               null
           ]
@@ -36,6 +40,16 @@ export default function UserStack() {
             tabBarLabel: "Home",
             tabBarIcon: ({ color }) => (
               <Feather name="home" size={24} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Dailies"
+          component={Dailies}
+          options={{
+            tabBarLabel: "Dailies",
+            tabBarIcon: ({ color }) => (
+              <Feather name="calendar" size={24} color={color} />
             ),
           }}
         />

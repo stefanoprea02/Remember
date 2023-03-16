@@ -8,8 +8,8 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } f
 const auth = getAuth();
 
 export default function SignUp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('user02@gmail.com');
+  const [password, setPassword] = useState('123456')
   const [error, setError] = useState('');
   const [scaleValue] = useState( new Animated.Value(1) );
   const [fadeValue] = useState( new Animated.Value(1) );
@@ -81,10 +81,12 @@ export default function SignUp() {
 
    return (
     <View style={styles.container}>
-
-      <Text style={styles.title}>Remember<Image style={styles.logo} source={require('../assets/remember-logo.png')} /></Text>
+      <View style={styles.top}>
+        <Text style={styles.title}>Remember</Text>
+        <Image style={styles.logo} source={require('../assets/remember-logo.png')} />
+      </View>
       <TextInput value={email} onChangeText={(email) => {setEmail(email)}} placeholder="Email" style={styles.textBoxes}></TextInput>
-      <TextInput value={password} onChangeText={(password) => {setPassword(password)}} placeholder="Password" style={styles.textBoxes}></TextInput>
+      <TextInput secureTextEntry={true} value={password} onChangeText={(password) => {setPassword(password)}} placeholder="Password" style={styles.textBoxes}></TextInput>
       {error ? <Text>{error}</Text> : ''}
 
       <View style={styles.buttons}>
@@ -113,9 +115,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  top: {
+    flexDirection: 'row',
+    marginBottom: 30,
+    marginTop: 10,
+    marginRight: -20
+  },
   textBoxes: {
-    maxWidth: '90%',
-    minWidth: '90%',
+    maxWidth: 350,
+    minWidth: 350,
     fontSize: 18,
     padding: 12,
     borderColor: '#4D5B9E',
@@ -129,7 +137,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     margin: 10,
-    elevation: 5
+    elevation: 5,
+    cursor: 'pointer'
   },
   buttonText: {
     color: '#fff',
@@ -140,8 +149,6 @@ const styles = StyleSheet.create({
     color: '#293264',
     fontSize: 50,
     letterSpacing: 2,
-    marginBottom: 40,
-    marginTop: 10,
     fontWeight: 800,
   },
   logo: {
