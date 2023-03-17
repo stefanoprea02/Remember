@@ -70,6 +70,7 @@ export default function SignUp() {
         .then(function(user){
           setDoc(doc(db, "users", user.user.uid),{
             email: email,
+            dailies: []
           })
         });
     } catch(error){

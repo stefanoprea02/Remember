@@ -1,19 +1,24 @@
 import React, { useState } from "react";
 import { Animated, Button, FlatList, Modal, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { StyleSheet } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
+import { collection, doc, setDoc, addDoc, getDoc } from 'firebase/firestore';
+import { db } from './config';
+import { useAuth } from "../hooks/useAuth";
+import { getAuth } from "firebase/auth";
 
 const DailySettings = ({ daily, onSave }) => {
   const time = new Date();
-  time.setDate(time.getDate() - 1);
   const newTime = time.toISOString();
   if(daily === undefined)
     daily = {
       title: '',
       notes: '',
-      completed: newTime
+      completed: newTime,
+      timeUnit: 'Days',
+      timeValue: 0
     }
   const [dailySetting, setDailySetting] = useState(daily);
-
   const handleInputChange = (settingName, text) => {
     setDailySetting({...dailySetting, [settingName]: text});
   };
@@ -21,6 +26,10 @@ const DailySettings = ({ daily, onSave }) => {
   const handleSave = () => {
     onSave(dailySetting);
   };
+
+  const handleDelete = () => {
+    onSave(null);
+  }
 
   return (
     <View style={styles.containerModal}>
@@ -40,13 +49,49 @@ const DailySettings = ({ daily, onSave }) => {
           style={[styles.textBoxes, {height: 100}]}
           multiline={true}
         />
+        <View style={styles.TimeStyles}>
+        <View style={styles.TimeUnitStyles}>
+          <Text style={styles.Label}>Time unit</Text>
+          <Dropdown
+            selectedValue={dailySetting.timeUnit}
+            onChange={(text) => handleInputChange('timeUnit', text.value)}
+            style={styles.PickerStyles}
+            inputSearchStyle={styles.textBoxes}
+            data={[
+              { value: "Minutes", label: "Minutes" },
+              { value: "Hours", label: "Hours" },
+              { value: "Days", label: "Days" },
+              { value: "Weeks", label: "Weeks" },
+            ]}
+            labelField="label"
+            valueField="value"
+            maxHeight={300}
+            value={dailySetting.timeUnit}
+          />
+        </View>
+        <View style={styles.TimeValueStyles}>
+          <Text style={styles.Label}>How often</Text>
+          <TextInput 
+            value={dailySetting.timeValue} 
+            onChangeText={(text) => handleInputChange('timeValue', text)}
+            style={styles.TimeValueInput}
+            keyboardType="numeric"
+        />
+        </View>
       </View>
-
-      <TouchableWithoutFeedback onPress={handleSave}>
-        <Animated.View style={styles.button}>
-          <Text style={styles.buttonText}>Save</Text>
-        </Animated.View>
-      </TouchableWithoutFeedback>
+      </View>
+      <View style={styles.TimeStyles}>
+        <TouchableWithoutFeedback onPress={handleSave}>
+          <Animated.View style={styles.button}>
+            <Text style={styles.buttonText}>Save</Text>
+          </Animated.View>
+        </TouchableWithoutFeedback>
+        <TouchableWithoutFeedback onPress={handleDelete}>
+          <Animated.View style={styles.DeleteStyles}>
+            <Text style={styles.buttonText}>Delete</Text>
+          </Animated.View>
+        </TouchableWithoutFeedback>
+      </View>
     </View>
   );
 };
@@ -55,6 +100,16 @@ export default function Dailies(){
     const [showSettings, setShowSettings] = useState(false);
     const [dailies, setDailies] = useState([]);
     const [selectedDaily, setSelectedDaily] = useState(null);
+    const [dummy, setDummy] = useState(false);
+    const [user, setUser] = useState();
+    const auth = useAuth();
+    if(user === undefined){
+      const string = JSON.stringify(auth.user)
+      if(string){
+        let parsed = JSON.parse(string);
+        setUser(parsed);
+      }
+    }
 
     const handleOpenSettings = () => {
       setShowSettings(true);
@@ -64,14 +119,35 @@ export default function Dailies(){
       setShowSettings(false);
     };
 
-    const handleSaveDaily = (dailySetting) => {
+    async function handleSaveDaily(dailySetting){
+      if(dailySetting === null)
+        return;
+      let howOftenInSecs = getT(dailySetting) * 1000;
+      const time = new Date();
+      const newTime = new Date(time.getTime() - howOftenInSecs).toISOString();
+      let newId = 0;
+      if(dailies.length == 0){
+        newId = 1;
+      }else{
+        newId = dailies[dailies.length - 1].id + 1;
+      }
+
       const newDaily = {
-        id: dailies.length + 1,
+        id: newId,
         title: dailySetting.title,
         notes: dailySetting.notes,
-        completed: dailySetting.completed
+        completed: newTime,
+        timeUnit: dailySetting.timeUnit,
+        timeValue: dailySetting.timeValue
       };
       setDailies([...dailies, newDaily]);
+      
+      const a = await setDoc(doc(db, "users", user.uid),{
+        email: user.email,
+        dailies: [...dailies, newDaily]
+      });
+      console.log([...dailies, newDaily]);
+
       handleCloseSettings();
     };
 
@@ -79,16 +155,62 @@ export default function Dailies(){
       setSelectedDaily(daily);
     }
 
-    const handleSaveEditedDaily = (editedDaily) => {
-      const updatedDailies = dailies.map((daily) => (daily.id === editedDaily.id ? editedDaily : daily));
-      setDailies(updatedDailies);
-      setSelectedDaily(null);
+    async function handleSaveEditedDaily(editedDaily){
+      if(editedDaily === null){
+        const updatedDailies = dailies.filter(function(item){
+          return item !== selectedDaily;
+        });
+        setDailies(updatedDailies);
+        setSelectedDaily(null);
+
+        const a = await setDoc(doc(db, "users", user.uid),{
+          email: user.email,
+          dailies: updatedDailies
+        });
+        console.log(updatedDailies);
+      }else{
+        const updatedDailies = dailies.map((daily) => (daily.id === editedDaily.id ? editedDaily : daily));
+        setDailies(updatedDailies);
+        setSelectedDaily(null);
+
+        const a = await setDoc(doc(db, "users", user.uid),{
+          email: user.email,
+          dailies: updatedDailies
+        });
+        console.log(updatedDailies);
+      }
     }
 
-    const completeDaily = (item) => {
+    async function completeDaily(item){
       const time = new Date().toISOString();
       const updatedDailies = dailies.map((daily) => (daily.id === item.id ? {...daily, completed: time} : daily));
       setDailies(updatedDailies);
+
+      const a = await setDoc(doc(db, "users", user.uid),{
+        email: user.email,
+        dailies: updatedDailies
+      });
+      console.log(updatedDailies);
+    }
+
+    function getT(item){
+      let howOftenInSecs;
+    
+      switch(item.timeUnit){
+        case "Minutes":
+          howOftenInSecs = 59;
+          break;
+        case "Hours":
+          howOftenInSecs = 3599;
+          break;
+        case "Days":
+          howOftenInSecs = 86399;
+          break;
+        case "Weeks":
+          howOftenInSecs = 604799;
+          break;
+      }
+      return howOftenInSecs = howOftenInSecs * item.timeValue;
     }
 
     const renderDailyItem = ({ item }) => {
@@ -97,7 +219,10 @@ export default function Dailies(){
 
       const timeDiff = Math.abs(date2.getTime() - date1.getTime());
       const timeDiffInSecs = Math.floor(timeDiff / 1000);
-      if (timeDiffInSecs >= 86399) {
+
+      let howOftenInSecs = getT(item);
+      
+      if (timeDiffInSecs >= howOftenInSecs) {
         return (
           <View style={styles.DailyStyle}>
             <TouchableWithoutFeedback onPress={() => handleEditDaily(item)}>
@@ -116,9 +241,9 @@ export default function Dailies(){
       } else {
         return (
           <View style={styles.DailyStyle}>
-            <TouchableWithoutFeedback>
+            <TouchableWithoutFeedback onPress={() => handleEditDaily(item)}>
               <Animated.View style={styles.LeftSide}>
-                <Text style={styles.Text}>{item.title}</Text>
+                <Text style={styles.Text}>{item.title}, {item.completed}</Text>
                 <Text style={styles.Notes}>{item.notes}</Text>
               </Animated.View>
             </TouchableWithoutFeedback>
@@ -131,6 +256,26 @@ export default function Dailies(){
         )
       }
     };
+
+    React.useEffect(() => {
+      const intervalId = setInterval(() => {
+        setDummy(!dummy);
+      }, 60000);
+  
+      return () => clearInterval(intervalId);
+    }, [dummy]);
+
+    React.useEffect(() => {
+      async function fetchData(){
+        const ref = doc(db, "users", user.uid);
+        const docSnap = await getDoc(ref);
+        if (docSnap.exists()) {
+          setDailies(docSnap.data().dailies);
+        } 
+      }
+      if(user)
+        fetchData();
+    }, [user]);
 
     return (
       <View style={styles.container}>
@@ -198,6 +343,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 2
   },
+  DeleteStyles: {
+    backgroundColor: 'red',
+    borderRadius: 5,
+    margin: 10,
+    elevation: 5,
+    cursor: 'pointer',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 2
+  },
   DailyStyle:{
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,7 +371,7 @@ const styles = StyleSheet.create({
   },
   RightSide: {
     backgroundColor: '#4D5B9E',
-    width: '20%',
+    width: 70,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -229,7 +385,7 @@ const styles = StyleSheet.create({
   },
   RightSideComplete: {
     backgroundColor: '#418a3b',
-    width: '20%',
+    width: 70,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -275,4 +431,29 @@ const styles = StyleSheet.create({
     borderWidth: 0.2,
     textAlignVertical: "top"
   },
+  TimeStyles: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  TimeValueStyles: {
+    width: '30%',
+  },
+  TimeValueInput: {
+    fontSize: 18,
+    padding: 14,
+    marginBottom: 10,
+    borderColor: '#4D5B9E',
+    borderWidth: 0.2,
+    textAlignVertical: "top"
+  },
+  TimeUnitStyles: {
+    width: '60%'
+  },
+  PickerStyles: {
+    fontSize: 18,
+    padding: 8,
+    borderColor: '#4D5B9E',
+    borderWidth: 0.2,
+    marginBottom: 10,
+  }
 });
