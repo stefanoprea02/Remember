@@ -65,12 +65,10 @@ const AddImage = ({category, images, onSave}) => {
       if (docSnap.exists()) {
         const categories = docSnap.data().categories;
         categories[category] = [...categories[category], image];
-        console.log(categories[category]);
+        const prevUser = docSnap.data();
         const a = await setDoc(doc(db, "users", user.uid),{
-          email: docSnap.data().email,
-          dailies: docSnap.data().dailies,
-          categories: categories,
-          recordings: docSnap.data().recordings
+          ...prevUser,
+          categories: categories
         });
       } 
     }

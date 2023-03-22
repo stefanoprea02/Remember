@@ -128,10 +128,9 @@ export default function UploadRecording() {
       if (docSnap.exists()) {
         let recordings = docSnap.data().recordings;
         recordings = [...recordings, recordUrl];
+        const prevUser = docSnap.data();
         const a = await setDoc(doc(db, "users", user.uid),{
-          email: docSnap.data().email,
-          dailies: docSnap.data().dailies,
-          categories: docSnap.data().categories,
+          ...prevUser,
           recordings: recordings
         });
       } 

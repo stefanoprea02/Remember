@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Animated, Button, FlatList, Modal, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { StyleSheet } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { collection, doc, setDoc, addDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, addDoc, ref, getDoc } from 'firebase/firestore';
 import { db } from './config';
 import { useAuth } from "../hooks/useAuth";
 import { getAuth } from "firebase/auth";
@@ -142,12 +142,16 @@ export default function Dailies(){
       };
       setDailies([...dailies, newDaily]);
       
-      const a = await setDoc(doc(db, "users", user.uid),{
-        email: user.email,
-        dailies: [...dailies, newDaily]
-      });
-      console.log([...dailies, newDaily]);
-
+      const ref = doc(db, "users", user.uid);
+      const docSnap = await getDoc(ref);
+      if (docSnap.exists()) {
+        const prevUser = docSnap.data();
+        const a = await setDoc(doc(db, "users", user.uid),{
+          ...prevUser,
+          dailies: [...dailies, newDaily]
+        });
+      }
+      
       handleCloseSettings();
     };
 
@@ -163,21 +167,29 @@ export default function Dailies(){
         setDailies(updatedDailies);
         setSelectedDaily(null);
 
-        const a = await setDoc(doc(db, "users", user.uid),{
-          email: user.email,
-          dailies: updatedDailies
-        });
-        console.log(updatedDailies);
+        const ref = doc(db, "users", user.uid);
+        const docSnap = await getDoc(ref);
+        if (docSnap.exists()) {
+          const prevUser = docSnap.data();
+          const a = await setDoc(doc(db, "users", user.uid),{
+            ...prevUser,
+            dailies: updatedDailies
+          });
+        }
       }else{
         const updatedDailies = dailies.map((daily) => (daily.id === editedDaily.id ? editedDaily : daily));
         setDailies(updatedDailies);
         setSelectedDaily(null);
 
-        const a = await setDoc(doc(db, "users", user.uid),{
-          email: user.email,
-          dailies: updatedDailies
-        });
-        console.log(updatedDailies);
+        const ref = doc(db, "users", user.uid);
+        const docSnap = await getDoc(ref);
+        if (docSnap.exists()) {
+          const prevUser = docSnap.data();
+          const a = await setDoc(doc(db, "users", user.uid),{
+            ...prevUser,
+            dailies: updatedDailies
+          });
+        }
       }
     }
 
@@ -186,11 +198,15 @@ export default function Dailies(){
       const updatedDailies = dailies.map((daily) => (daily.id === item.id ? {...daily, completed: time} : daily));
       setDailies(updatedDailies);
 
-      const a = await setDoc(doc(db, "users", user.uid),{
-        email: user.email,
-        dailies: updatedDailies
-      });
-      console.log(updatedDailies);
+      const ref = doc(db, "users", user.uid);
+      const docSnap = await getDoc(ref);
+      if (docSnap.exists()) {
+        const prevUser = docSnap.data();
+        const a = await setDoc(doc(db, "users", user.uid),{
+          ...prevUser,
+          dailies: updatedDailies
+        });
+      }
     }
 
     function getT(item){
