@@ -5,7 +5,6 @@ import RootNavigation from './navigation/navigationRoot';
 
 export default function App() {
 
-
   return (
     <View style={styles.container}>
       <RootNavigation />
