@@ -106,11 +106,11 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       paddingHorizontal: 5,
       paddingVertical: 2,
-      width:'90%'
+      width:'95%'
     },
     buttonText: {
       color: '#fff',
-      fontSize: 20,
+      fontSize: 18,
       padding: 7,
     },
     logo: {

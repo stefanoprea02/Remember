@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 17,
     padding: 7,
   },
   Text: {

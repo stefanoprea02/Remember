@@ -112,7 +112,7 @@ export default function DailySettings({ daily, onSave }){
       paddingVertical: 2
     },
     DeleteStyles: {
-      backgroundColor: 'red',
+      backgroundColor: '#e34234',
       borderRadius: 5,
       margin: 10,
       elevation: 5,
@@ -124,7 +124,7 @@ export default function DailySettings({ daily, onSave }){
     },
     buttonText: {
       color: '#fff',
-      fontSize: 20,
+      fontSize: 18,
       padding: 7,
     },
     Label:{

@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
       color: '#fff',
-      fontSize: 20,
+      fontSize: 18,
       padding: 7,
     },
 });

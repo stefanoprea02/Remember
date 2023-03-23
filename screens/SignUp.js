@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from './config';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { animateButton, animateButton2 } from '../components/ButtonAnimations';
 
 const auth = getAuth();
 
@@ -12,38 +13,9 @@ export default function SignUp() {
   const [error, setError] = useState('');
   const [scaleValue] = useState( new Animated.Value(1) );
   const [fadeValue] = useState( new Animated.Value(1) );
-  
-  const animateButton = () => {
-    Animated.timing(scaleValue, {
-      toValue: 0.8,
-      duration: 200,
-      useNativeDriver: true,
-  }).start(() => {
-    Animated.timing(scaleValue, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-      }).start();
-    })
-  };
-
-  const animateButton2 = () => {
-    Animated.sequence([
-      Animated.timing(fadeValue, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeValue, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true,
-      })
-    ]).start();
-  };
 
   async function signIn(){
-    animateButton2();
+    animateButton2(fadeValue);
     if (email === "" || password === "") {
       setError("Email and password are mandatory.");
       return;
@@ -58,7 +30,7 @@ export default function SignUp() {
   }
 
   async function signUp() {
-    animateButton();
+    animateButton(scaleValue);
     if (email === '' || password === '') {
       setError('Email and password are mandatory.');
       return;
