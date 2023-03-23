@@ -1,5 +1,4 @@
 import React from "react";
-import { View, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Feather from "react-native-vector-icons/Feather";
@@ -7,6 +6,8 @@ import Feather from "react-native-vector-icons/Feather";
 import Home from "../screens/Home";
 import SliderBar from "../screens/SliderBar";
 import Dailies from "../screens/Dailies";
+import Memories from "../screens/Memories";
+import UploadRecording from "../screens/UploadRecording";
 
 const Tab = createBottomTabNavigator();
 
@@ -54,10 +55,30 @@ export default function UserStack() {
           }}
         />
         <Tab.Screen
+          name="Memories"
+          component={Memories}
+          options={{
+            tabBarLabel: "Memories",
+            tabBarIcon: ({ color }) => (
+              <Feather name="camera" size={24} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Recordings"
+          component={UploadRecording}
+          options={{
+            tabBarLabel: "Audio",
+            tabBarIcon: ({ color }) => (
+              <Feather name="mic" size={24} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
           name="SliderBar"
           component={SliderBar}
           options={{
-            tabBarLabel: "Slider Bar",
+            tabBarLabel: "Options",
             tabBarIcon: ({ color }) => (
               <Feather name="sliders" size={24} color={color} />
             ),

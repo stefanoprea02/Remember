@@ -1,5 +1,4 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Animated, TouchableWithoutFeedback, Easing, Image } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import React, { useState } from 'react'
 import Slider from '@react-native-community/slider'
 

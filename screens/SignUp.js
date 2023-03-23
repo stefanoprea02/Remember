@@ -1,7 +1,6 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Animated, TouchableWithoutFeedback, Easing, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Animated, TouchableWithoutFeedback, Image } from 'react-native';
 import React, { useState } from 'react'
-import { collection, doc, setDoc, addDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from './config';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -70,7 +69,13 @@ export default function SignUp() {
         .then(function(user){
           setDoc(doc(db, "users", user.user.uid),{
             email: email,
-            dailies: []
+            dailies: [],
+            categories: {
+              family: [],
+              events: [],
+              hobbies: []
+            },
+            recordings: []
           })
         });
     } catch(error){
