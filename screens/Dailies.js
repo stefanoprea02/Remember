@@ -1,100 +1,10 @@
 import React, { useState } from "react";
-import { Animated, Button, FlatList, Modal, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
+import { Animated, FlatList, Modal, Text, TouchableWithoutFeedback, View } from "react-native";
 import { StyleSheet } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
-import { collection, doc, setDoc, addDoc, ref, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from './config';
 import { useAuth } from "../hooks/useAuth";
-import { getAuth } from "firebase/auth";
-
-const DailySettings = ({ daily, onSave }) => {
-  const time = new Date();
-  const newTime = time.toISOString();
-  if(daily === undefined)
-    daily = {
-      title: '',
-      notes: '',
-      completed: newTime,
-      timeUnit: 'Days',
-      timeValue: 0
-    }
-  const [dailySetting, setDailySetting] = useState(daily);
-  const handleInputChange = (settingName, text) => {
-    setDailySetting({...dailySetting, [settingName]: text});
-  };
-
-  const handleSave = () => {
-    onSave(dailySetting);
-  };
-
-  const handleDelete = () => {
-    onSave(null);
-  }
-
-  return (
-    <View style={styles.containerModal}>
-      <View>
-        <Text style={styles.Label}>Title</Text>
-        <TextInput 
-          value={dailySetting.title} 
-          onChangeText={(text) => handleInputChange('title', text)}
-          style={styles.textBoxes}
-        />
-      </View>
-      <View>
-        <Text style={styles.Label}>Notes</Text>
-        <TextInput 
-          value={dailySetting.notes} 
-          onChangeText={(text) => handleInputChange('notes', text)}
-          style={[styles.textBoxes, {height: 100}]}
-          multiline={true}
-        />
-        <View style={styles.TimeStyles}>
-        <View style={styles.TimeUnitStyles}>
-          <Text style={styles.Label}>Time unit</Text>
-          <Dropdown
-            selectedValue={dailySetting.timeUnit}
-            onChange={(text) => handleInputChange('timeUnit', text.value)}
-            style={styles.PickerStyles}
-            inputSearchStyle={styles.textBoxes}
-            data={[
-              { value: "Minutes", label: "Minutes" },
-              { value: "Hours", label: "Hours" },
-              { value: "Days", label: "Days" },
-              { value: "Weeks", label: "Weeks" },
-            ]}
-            labelField="label"
-            valueField="value"
-            maxHeight={300}
-            value={dailySetting.timeUnit}
-          />
-        </View>
-        <View style={styles.TimeValueStyles}>
-          <Text style={styles.Label}>How often</Text>
-          <TextInput 
-            value={dailySetting.timeValue} 
-            onChangeText={(text) => handleInputChange('timeValue', text)}
-            style={styles.TimeValueInput}
-            keyboardType="numeric"
-        />
-        </View>
-      </View>
-      </View>
-      <View style={styles.TimeStyles}>
-        <TouchableWithoutFeedback onPress={handleSave}>
-          <Animated.View style={styles.button}>
-            <Text style={styles.buttonText}>Save</Text>
-          </Animated.View>
-        </TouchableWithoutFeedback>
-        <TouchableWithoutFeedback onPress={handleDelete}>
-          <Animated.View style={styles.DeleteStyles}>
-            <Text style={styles.buttonText}>Delete</Text>
-          </Animated.View>
-        </TouchableWithoutFeedback>
-      </View>
-    </View>
-  );
-};
+import DailySettings from "../components/DailySettings";
 
 export default function Dailies(){
     const [showSettings, setShowSettings] = useState(false);
@@ -338,29 +248,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
-  containerModal: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   list: {
     flex: 1,
   },
   button: {
     //flex: 1,
     backgroundColor: '#4D5B9E',
-    borderRadius: 5,
-    margin: 10,
-    elevation: 5,
-    cursor: 'pointer',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 2
-  },
-  DeleteStyles: {
-    backgroundColor: 'red',
     borderRadius: 5,
     margin: 10,
     elevation: 5,
@@ -436,48 +329,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     padding: 0,
   },
-  Label:{
-    color: '#4D5B9E',
-    fontSize: 17,
-    padding: 2,
-    fontWeight: 500
-  },
-  InputView: {
-    backgroundColor: '#7587e0'
-  },
-  textBoxes: {
-    maxWidth: 350,
-    minWidth: 350,
-    fontSize: 18,
-    padding: 12,
-    marginBottom: 10,
-    borderColor: '#4D5B9E',
-    borderWidth: 0.2,
-    textAlignVertical: "top"
-  },
-  TimeStyles: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  TimeValueStyles: {
-    width: '30%',
-  },
-  TimeValueInput: {
-    fontSize: 18,
-    padding: 14,
-    marginBottom: 10,
-    borderColor: '#4D5B9E',
-    borderWidth: 0.2,
-    textAlignVertical: "top"
-  },
-  TimeUnitStyles: {
-    width: '60%'
-  },
-  PickerStyles: {
-    fontSize: 18,
-    padding: 8,
-    borderColor: '#4D5B9E',
-    borderWidth: 0.2,
-    marginBottom: 10,
-  }
 });

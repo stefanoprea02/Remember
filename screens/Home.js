@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, TouchableWithoutFeedback } from "react-native";
 import { StyleSheet } from "react-native-web";
-import { getAuth, signOut } from "@firebase/auth";
+import { getAuth } from "@firebase/auth";
 import { Animated } from "react-native";
 
 const auth = getAuth();

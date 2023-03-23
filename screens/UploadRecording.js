@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Audio } from 'expo-av';
-import { StyleSheet, Text, View, Button, Image, ActivityIndicator, TextInput, TouchableWithoutFeedback, Animated } from 'react-native';
+import { StyleSheet, Text, View, Button, Image, ActivityIndicator, TextInput, TouchableWithoutFeedback, Animated, ScrollView } from 'react-native';
 import { app, firebase, db } from './config';
 import { useAuth } from '../hooks/useAuth';
 import { storage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -147,9 +147,11 @@ export default function UploadRecording() {
               <Text style={styles.buttonText}>{recording ? 'Stop Recording' : 'Start Recording'}</Text>
           </Animated.View>
       </TouchableWithoutFeedback>
-      <View>
-        {getRecordingLines()}
-      </View>
+      <ScrollView>
+        <View>
+          {getRecordingLines()}
+        </View>
+      </ScrollView>
       {!uploading ? 
         <TouchableWithoutFeedback onPress={saveSoundAndUpdateDoc}>
             <Animated.View style={styles.button}>
@@ -185,10 +187,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  fill: {
-    flex: 1,
-    margin: 16
   },
   buttonText: {
     color: '#fff',
