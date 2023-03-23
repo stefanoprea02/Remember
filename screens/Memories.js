@@ -81,9 +81,7 @@ export default function Memories() {
                 </TouchableWithoutFeedback>
               </View>
             </View>
-          )
-          }
-          
+          )}
         </View>
       )
       }
