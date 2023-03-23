@@ -69,14 +69,14 @@ export default function Memories() {
                 </View>
               </ScrollView>
               <View style={{flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap'}}>
-                <TouchableWithoutFeedback onPress={() => {setSelectedCategory('')}}>
-                  <Animated.View style={styles.button}>
-                    <Text style={styles.buttonText}>Select Category</Text>
-                  </Animated.View>
-                </TouchableWithoutFeedback>
                 <TouchableWithoutFeedback onPress={() => {setAddImage(true)}}>
                   <Animated.View style={styles.button}>
                     <Text style={styles.buttonText}>Add Image</Text>
+                  </Animated.View>
+                </TouchableWithoutFeedback>
+                <TouchableWithoutFeedback onPress={() => {setSelectedCategory('')}}>
+                  <Animated.View style={styles.button}>
+                    <Text style={styles.buttonText}>Select Category</Text>
                   </Animated.View>
                 </TouchableWithoutFeedback>
               </View>
