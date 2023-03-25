@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Animated, FlatList, Modal, Text, TouchableWithoutFeedback, View } from "react-native";
 import { StyleSheet } from "react-native";
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from './config';
 import { useAuth } from "../hooks/useAuth";
 import DailySettings from "../components/DailySettings";
+import PushNotificationContext from "../PushNotificationContext";
+import { sendPushNotification, schedulePushNotification } from "../PushNotificationContext";
 
 export default function Dailies(){
     const [showSettings, setShowSettings] = useState(false);
     const [dailies, setDailies] = useState([]);
     const [selectedDaily, setSelectedDaily] = useState(null);
     const [dummy, setDummy] = useState(false);
+    const expoPushToken = useContext(PushNotificationContext);
     const [user, setUser] = useState();
     const auth = useAuth();
     if(user === undefined){
@@ -107,6 +110,19 @@ export default function Dailies(){
       const time = new Date().toISOString();
       const updatedDailies = dailies.map((daily) => (daily.id === item.id ? {...daily, completed: time} : daily));
       setDailies(updatedDailies);
+      const secs = getT(item);
+      schedulePushNotification({
+        content: {
+          to: expoPushToken,
+          title: `You have a new daily to complete!`,
+          body: `Daily ${item.title} is ready!`,
+          data: { someData: 'goes here' },
+        },
+        trigger:{
+          seconds: secs,
+          channelId: 'default'
+        },
+      });
 
       const ref = doc(db, "users", user.uid);
       const docSnap = await getDoc(ref);
@@ -186,7 +202,7 @@ export default function Dailies(){
     React.useEffect(() => {
       const intervalId = setInterval(() => {
         setDummy(!dummy);
-      }, 60000);
+      }, 5000);
   
       return () => clearInterval(intervalId);
     }, [dummy]);
