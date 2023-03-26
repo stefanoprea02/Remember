@@ -85,3 +85,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   }
 });
+
+//eas build -p android --profile preview
+//expo build:android -t app-bundle

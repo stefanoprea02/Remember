@@ -3,24 +3,19 @@ import { Animated, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View }
 import { Dropdown } from "react-native-element-dropdown";
 
 
-export default function DailySettings({ daily, onSave }){
-    const time = new Date().toISOString();
-    if(daily === undefined)
-      daily = {
-        id: '',
+export default function RecordingSettings({ recording, onSave }){
+    if(recording === undefined)
+      recording = {
         title: '',
-        notes: '',
-        completed: time,
-        timeUnit: 'Days',
-        timeValue: ''
+        notes: ''
       }
-    const [dailySetting, setDailySetting] = useState(daily);
+    const [recordingSetting, setRecordingSetting] = useState(recording);
     const handleInputChange = (settingName, text) => {
-      setDailySetting({...dailySetting, [settingName]: text});
+        setRecordingSetting({...recordingSetting, [settingName]: text});
     };
   
     const handleSave = () => {
-      onSave(dailySetting);
+      onSave(recordingSetting);
     };
   
     const handleDelete = () => {
@@ -32,7 +27,7 @@ export default function DailySettings({ daily, onSave }){
         <View>
           <Text style={styles.Label}>Title</Text>
           <TextInput 
-            value={dailySetting.title} 
+            value={recordingSetting.title} 
             onChangeText={(text) => handleInputChange('title', text)}
             style={styles.textBoxes}
           />
@@ -40,41 +35,10 @@ export default function DailySettings({ daily, onSave }){
         <View>
           <Text style={styles.Label}>Notes</Text>
           <TextInput 
-            value={dailySetting.notes} 
-            onChangeText={(text) => handleInputChange('notes', text)}
+            value={recordingSetting.notes} 
+            onChangeText={(notes) => handleInputChange('notes', notes)}
             style={[styles.textBoxes, {height: 150}]}
-            multiline={true}
           />
-          <View style={styles.TimeStyles}>
-          <View style={styles.TimeUnitStyles}>
-            <Text style={styles.Label}>Time unit</Text>
-            <Dropdown
-              selectedValue={dailySetting.timeUnit}
-              onChange={(text) => handleInputChange('timeUnit', text.value)}
-              style={styles.PickerStyles}
-              inputSearchStyle={styles.textBoxes}
-              data={[
-                { value: "Minutes", label: "Minutes" },
-                { value: "Hours", label: "Hours" },
-                { value: "Days", label: "Days" },
-                { value: "Weeks", label: "Weeks" },
-              ]}
-              labelField="label"
-              valueField="value"
-              maxHeight={300}
-              value={dailySetting.timeUnit}
-            />
-          </View>
-          <View style={styles.TimeValueStyles}>
-            <Text style={styles.Label}>How often</Text>
-            <TextInput 
-              value={dailySetting.timeValue} 
-              onChangeText={(text) => handleInputChange('timeValue', text)}
-              style={styles.TimeValueInput}
-              keyboardType="numeric"
-          />
-          </View>
-        </View>
         </View>
         <View style={styles.TimeStyles}>
           <TouchableWithoutFeedback onPress={handleSave}>

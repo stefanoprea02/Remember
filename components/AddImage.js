@@ -4,10 +4,12 @@ import { firebase, db } from '../screens/config';
 import * as ImagePicker from 'expo-image-picker';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuth } from "../hooks/useAuth";
+import { uuidv4 } from '@firebase/util';
 
 export default function AddImage({category, onSave}) {
     const [filename, setFileName] = useState('');
     const [image, setImage] = useState(null);
+    const [id, setId] = useState('');
     const [uploading, setUploading] = useState(false);
     const [scaleValue] = useState( new Animated.Value(1) );
     const [fadeValue] = useState( new Animated.Value(1) );
@@ -40,7 +42,12 @@ export default function AddImage({category, onSave}) {
         const docSnap = await getDoc(ref);
         if (docSnap.exists()) {
           const categories = docSnap.data().categories;
-          categories[category] = [...categories[category], image];
+          categories[category] = [...categories[category], {
+            id: id,
+            title: filename,
+            notes: "",
+            url: image,
+          }];
           const prevUser = docSnap.data();
           const a = await setDoc(doc(db, "users", user.uid),{
             ...prevUser,
@@ -65,7 +72,9 @@ export default function AddImage({category, onSave}) {
         xhr.open('GET', image, true);
         xhr.send(null);
       })
-      const ref = firebase.storage().ref().child(`Memories/` + filename)
+      const fileId = uuidv4();
+      setId(fileId);
+      const ref = firebase.storage().ref().child(`Memories/${user.uid}/${fileId}.image`)
       const snapshot = ref.put(blob)
       snapshot.on(firebase.storage.TaskEvent.STATE_CHANGED,
         ()=>{
@@ -96,7 +105,7 @@ export default function AddImage({category, onSave}) {
             <Text style={styles.buttonText}>Select Picture</Text>
           </Animated.View>
         </TouchableWithoutFeedback>
-        <TextInput value={filename} onChangeText={(filename) => {setFileName(filename)}} placeholder="File Name" style={styles.textBoxes}></TextInput>
+        <TextInput value={filename} onChangeText={(filename) => {setFileName(filename)}} placeholder="Image title" style={styles.textBoxes}></TextInput>
         {!uploading ? 
           <TouchableWithoutFeedback onPress={uploadImage}>
             <Animated.View style={[styles.button, { opacity: fadeValue }]}>

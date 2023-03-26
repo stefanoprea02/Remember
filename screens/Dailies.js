@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Animated, FlatList, Modal, Text, TouchableWithoutFeedback, View } from "react-native";
+import { Animated, Dimensions, FlatList, Modal, Text, TouchableWithoutFeedback, View } from "react-native";
 import { StyleSheet } from "react-native";
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from './config';
@@ -24,92 +24,7 @@ export default function Dailies(){
       }
     }
 
-    const handleOpenSettings = () => {
-      setShowSettings(true);
-    };
-
-    const handleCloseSettings = () => {
-      setShowSettings(false);
-    };
-
-    async function handleSaveDaily(dailySetting){
-      if(dailySetting === null)
-        return;
-      let howOftenInSecs = getT(dailySetting) * 1000;
-      const time = new Date();
-      const newTime = new Date(time.getTime() - howOftenInSecs).toISOString();
-      let newId = 0;
-      if(dailies.length == 0){
-        newId = 1;
-      }else{
-        newId = dailies[dailies.length - 1].id + 1;
-      }
-
-      const newDaily = {
-        id: newId,
-        title: dailySetting.title,
-        notes: dailySetting.notes,
-        completed: newTime,
-        timeUnit: dailySetting.timeUnit,
-        timeValue: dailySetting.timeValue
-      };
-      setDailies([...dailies, newDaily]);
-      
-      const ref = doc(db, "users", user.uid);
-      const docSnap = await getDoc(ref);
-      if (docSnap.exists()) {
-        const prevUser = docSnap.data();
-        const a = await setDoc(doc(db, "users", user.uid),{
-          ...prevUser,
-          dailies: [...dailies, newDaily]
-        });
-      }
-      
-      handleCloseSettings();
-    };
-
-    const handleEditDaily = (daily) => {
-      setSelectedDaily(daily);
-    }
-
-    async function handleSaveEditedDaily(editedDaily){
-      if(editedDaily === null){
-        const updatedDailies = dailies.filter(function(item){
-          return item !== selectedDaily;
-        });
-        setDailies(updatedDailies);
-        setSelectedDaily(null);
-
-        const ref = doc(db, "users", user.uid);
-        const docSnap = await getDoc(ref);
-        if (docSnap.exists()) {
-          const prevUser = docSnap.data();
-          const a = await setDoc(doc(db, "users", user.uid),{
-            ...prevUser,
-            dailies: updatedDailies
-          });
-        }
-      }else{
-        const updatedDailies = dailies.map((daily) => (daily.id === editedDaily.id ? editedDaily : daily));
-        setDailies(updatedDailies);
-        setSelectedDaily(null);
-
-        const ref = doc(db, "users", user.uid);
-        const docSnap = await getDoc(ref);
-        if (docSnap.exists()) {
-          const prevUser = docSnap.data();
-          const a = await setDoc(doc(db, "users", user.uid),{
-            ...prevUser,
-            dailies: updatedDailies
-          });
-        }
-      }
-    }
-
-    async function completeDaily(item){
-      const time = new Date().toISOString();
-      const updatedDailies = dailies.map((daily) => (daily.id === item.id ? {...daily, completed: time} : daily));
-      setDailies(updatedDailies);
+    function scheduleNotfication(item){
       const secs = getT(item);
       schedulePushNotification({
         content: {
@@ -123,6 +38,59 @@ export default function Dailies(){
           channelId: 'default'
         },
       });
+    }
+
+    async function saveToDB(updatedDailies){
+      const ref = doc(db, "users", user.uid);
+      const docSnap = await getDoc(ref);
+      if (docSnap.exists()) {
+        const prevUser = docSnap.data();
+        const a = await setDoc(doc(db, "users", user.uid),{
+          ...prevUser,
+          dailies: updatedDailies
+        });
+      }
+    }
+
+    async function handleSaveDaily(dailySetting){
+      if(dailySetting === null)
+        return;
+      if(dailySetting.id == ''){
+        if(dailies.length == 0){
+          dailySetting.id = 1;
+        }else{
+          dailySetting.id = dailies[dailies.length - 1].id + 1;
+        }
+      }
+      const updatedDailies = [...dailies, dailySetting];
+      setDailies(updatedDailies);
+      scheduleNotfication(dailySetting);
+      saveToDB(updatedDailies);
+      setShowSettings(false);
+    };
+
+    async function handleSaveEditedDaily(editedDaily){
+      if(editedDaily === null){
+        const updatedDailies = dailies.filter(function(item){
+          return item !== selectedDaily;
+        });
+        setDailies(updatedDailies);
+        setSelectedDaily(null);
+        saveToDB(updatedDailies);
+      }else{
+        const updatedDailies = dailies.map((daily) => (daily.id === editedDaily.id ? editedDaily : daily));
+        setDailies(updatedDailies);
+        setSelectedDaily(null);
+        scheduleNotfication(editedDaily);
+        saveToDB(updatedDailies);
+      }
+    }
+
+    async function completeDaily(item){
+      const time = new Date().toISOString();
+      const updatedDailies = dailies.map((daily) => (daily.id === item.id ? {...daily, completed: time} : daily));
+      setDailies(updatedDailies);
+      scheduleNotfication(item);
 
       const ref = doc(db, "users", user.uid);
       const docSnap = await getDoc(ref);
@@ -140,16 +108,16 @@ export default function Dailies(){
     
       switch(item.timeUnit){
         case "Minutes":
-          howOftenInSecs = 59;
+          howOftenInSecs = 60;
           break;
         case "Hours":
-          howOftenInSecs = 3599;
+          howOftenInSecs = 3600;
           break;
         case "Days":
-          howOftenInSecs = 86399;
+          howOftenInSecs = 86400;
           break;
         case "Weeks":
-          howOftenInSecs = 604799;
+          howOftenInSecs = 604800;
           break;
       }
       return howOftenInSecs = howOftenInSecs * item.timeValue;
@@ -163,11 +131,16 @@ export default function Dailies(){
       const timeDiffInSecs = Math.floor(timeDiff / 1000);
 
       let howOftenInSecs = getT(item);
+      const dif = howOftenInSecs - timeDiffInSecs;
+
+      const days = Math.floor(dif / (3600 * 24));
+      const hours = Math.floor((dif % (3600 * 24)) / 3600);
+      const minutes = Math.floor((dif % 3600) / 60);
       
       if (timeDiffInSecs >= howOftenInSecs) {
         return (
           <View style={styles.DailyStyle}>
-            <TouchableWithoutFeedback onPress={() => handleEditDaily(item)}>
+            <TouchableWithoutFeedback onPress={() => setSelectedDaily(item)}>
               <Animated.View style={styles.LeftSide}>
                 <Text style={styles.Text}>{item.title}</Text>
                 <Text style={styles.Notes}>{item.notes}</Text>
@@ -183,15 +156,13 @@ export default function Dailies(){
       } else {
         return (
           <View style={styles.DailyStyle}>
-            <TouchableWithoutFeedback onPress={() => handleEditDaily(item)}>
-              <Animated.View style={styles.LeftSideComplete}>
-                <Text style={styles.Text}>{item.title}</Text>
-                <Text style={styles.Notes}>{item.notes}</Text>
-              </Animated.View>
-            </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback>
-              <Animated.View style={styles.RightSideComplete}>
-                <View style={styles.CompleteCompleteStyle}></View>
+            <TouchableWithoutFeedback onPress={() => setSelectedDaily(item)}>
+              <Animated.View style={[styles.LeftSideComplete, {width: Dimensions.get('window').width * 70/100 + 70}]}>
+                <View>
+                  <Text style={styles.Text}>{item.title}</Text>
+                  <Text style={styles.Notes}>{item.notes}</Text>
+                </View>
+                <Text style={styles.Time}>{days}D {hours}H {minutes}M left</Text>
               </Animated.View>
             </TouchableWithoutFeedback>
           </View>
@@ -229,7 +200,7 @@ export default function Dailies(){
         />
   
         <View style={styles.buttonContainer}>
-          <TouchableWithoutFeedback onPress={handleOpenSettings}>
+          <TouchableWithoutFeedback onPress={() => setShowSettings(true)}>
             <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>Add Daily</Text>
             </Animated.View>
@@ -238,7 +209,7 @@ export default function Dailies(){
   
         <Modal visible={showSettings} animationType="slide">
           <DailySettings onSave={handleSaveDaily} />
-          <TouchableWithoutFeedback onPress={handleCloseSettings}>
+          <TouchableWithoutFeedback onPress={() => setShowSettings(false)}>
             <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>Close</Text>
             </Animated.View>
@@ -292,7 +263,8 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     paddingVertical: 10,
     width: '70%',
-    height: '100%'
+    height: '100%',
+    overflow: 'hidden'
   },
   RightSide: {
     backgroundColor: '#4D5B9E',
@@ -311,24 +283,11 @@ const styles = StyleSheet.create({
   LeftSideComplete: {
     backgroundColor: '#adb4d8',
     cursor: 'pointer',
-    paddingLeft: 15,
+    paddingHorizontal: 15,
     paddingVertical: 10,
-    width: '70%',
-    height: '100%'
-  },
-  RightSideComplete: {
-    backgroundColor: '#adb4d8',
-    width: 70,
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    cursor: 'pointer',
-  },
-  CompleteCompleteStyle:{
-    backgroundColor: '#adb4d8',
-    width: 40,
-    height: 40,
-    borderRadius: 10
+    flexDirection: 'row',
+    justifyContent: 'space-between'
   },
   buttonText: {
     color: '#fff',
@@ -345,4 +304,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     padding: 0,
   },
+  Time: {
+    color: '#4D5B9E',
+    fontSize: 16,
+    padding: 0,
+  }
 });

@@ -1,18 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Audio } from 'expo-av';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Animated, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Animated, ScrollView, Modal } from 'react-native';
 import { firebase, db } from './config';
 import { useAuth } from '../hooks/useAuth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getStorage, ref, deleteObject } from '@firebase/storage';
+import { uuidv4 } from '@firebase/util';
+import RecordingSettings from '../components/RecordingSettings';
 
 export default function UploadRecording() {
   const [recording, setRecording] = React.useState();
   const [recordings, setRecordings] = React.useState([]);
   const [message, setMessage] = React.useState("");
-  const [uploading, setUploading] = useState(false);
-  const [recordUrl, setRecordUrl] = useState(null);
+  const [selectedRecording, setSelectedRecording] = React.useState("");
+  const [newRecording, setNewRecording] = useState(null);
   const [user, setUser] = useState();
   const auth = useAuth();
   if(user === undefined){
@@ -68,16 +70,22 @@ export default function UploadRecording() {
     const uriParts = recording.getURI().split(".");
     const fileType = uriParts[uriParts.length - 1];
 
-    const path = `Recordings/${user.uid}/${recordings.length}.${fileType}`;
+    const fileId = uuidv4();
+    const path = `Recordings/${user.uid}/${fileId}.${fileType}`;
     const recordRef = firebase.storage().ref(path);
   
     await recordRef.put(blob, {contentType: `audio/${fileType}`})
       .then(async (snapshot) => {
         const downloadURL = await recordRef.getDownloadURL()
-          .then((recordUrl2) => {
-            setRecordUrl(recordUrl2);
-            let rec = recordings;
-            setRecordings([...rec, recordUrl2]);
+          .then((recordUrl) => {
+            const record = {
+              id: fileId,
+              title: "Untitled",
+              notes: "",
+              url: recordUrl
+            }
+            setNewRecording(record);
+            setRecordings([...recordings, record]);
           });
         blob.close();
       })
@@ -101,19 +109,9 @@ export default function UploadRecording() {
     }
   }
 
-  /*
-  async function deleteAudio(index){
-    const storage = getStorage();
-    const desertRef = ref(storage, `Recordings/${user.uid}/${index}.3gp`);
-    deleteObject(desertRef);
-
-    console.log(recordings);
-    const updatedRecordings = recordings.splice(, 1);
-    setRecordings(updatedRecordings);
-    console.log(updatedRecordings);
-
-    const ref2 = doc(db, "users", user.uid);
-    const docSnap = await getDoc(ref2);
+  async function saveToDB(updatedRecordings){
+    const ref = doc(db, "users", user.uid);
+    const docSnap = await getDoc(ref);
     if (docSnap.exists()) {
       const prevUser = docSnap.data();
       const a = await setDoc(doc(db, "users", user.uid),{
@@ -123,22 +121,47 @@ export default function UploadRecording() {
     }
   }
 
-            <TouchableWithoutFeedback onPress={() => deleteAudio(index)}>
-            <Animated.View style={styles.DeleteStyles}>
-              <Text style={styles.buttonText}>Delete</Text>
-            </Animated.View>
-          </TouchableWithoutFeedback>
-  */
+  async function deleteAudio(index){
+    const storage = getStorage();
+    const desertRef = ref(storage, `Recordings/${user.uid}/${index}.3gp`);
+    deleteObject(desertRef);
+
+    const updatedRecordings = recordings.filter(function(item){
+      return item.id !== index;
+    });
+    setRecordings(updatedRecordings);
+    saveToDB(updatedRecordings);
+  }
+
+  async function handleSaveEditedRecording(editedRecording){
+    let updatedRecordings;
+    if(editedRecording === null){
+      setSelectedRecording(null);
+      deleteAudio(selectedRecording.id);
+    }else{
+      updatedRecordings = recordings.map((record) => (record.id === editedRecording.id ? editedRecording : record));  
+      setRecordings(updatedRecordings);
+      saveToDB(updatedRecordings);
+      setSelectedRecording(null);
+    }
+  }
 
   let records = [];
   if(recordings){
-    records = recordings.map((recordingLine, index) => {
+    records = recordings.map((record) => {
       return (
-        <View key={index} style={styles.row}>
-          <Text style={styles.recordingText}>Recording {index + 1}</Text>
-          <TouchableWithoutFeedback onPress={() => playAudio(index)}>
+        <View key={record.id} style={styles.row}>
+          <View style={styles.recordingTextView}>
+            <Text style={styles.recordingText}>{record.title}</Text>
+          </View>
+          <TouchableWithoutFeedback onPress={() => playAudio(record.id)}>
             <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>Play</Text>
+            </Animated.View>
+          </TouchableWithoutFeedback>
+          <TouchableWithoutFeedback onPress={() => setSelectedRecording(record)}>
+            <Animated.View style={styles.DetailsStyles}>
+              <Text style={styles.buttonText}>Details</Text>
             </Animated.View>
           </TouchableWithoutFeedback>
         </View>
@@ -151,18 +174,19 @@ export default function UploadRecording() {
       const ref = doc(db, "users", user.uid);
       const docSnap = await getDoc(ref);
       if (docSnap.exists()) {
-        let recordings = docSnap.data().recordings;
-        recordings = [...recordings, recordUrl];
+        let newRecordings = docSnap.data().recordings;
+        newRecordings = [...recordings, newRecording];
         const prevUser = docSnap.data();
         const a = await setDoc(doc(db, "users", user.uid),{
           ...prevUser,
-          recordings: recordings
+          recordings: newRecordings
         });
+        setNewRecording(null);
       } 
     }
-    if(recordUrl && recordUrl[0]==='h' && recordUrl != recordings[recordings.length - 1])
+    if(newRecording && newRecording.url[0]==='h' && newRecording != recordings[recordings.length - 1])
       fetchData();
-  }, [recordUrl]);
+  }, [newRecording]);
 
   React.useEffect(() => {
     async function fetchData(){
@@ -189,6 +213,16 @@ export default function UploadRecording() {
               <Text style={styles.buttonText}>{recording ? 'Stop Recording' : 'Start Recording'}</Text>
           </Animated.View>
       </TouchableWithoutFeedback>
+      {selectedRecording && (
+        <Modal visible={true} animationType="slide">
+          <RecordingSettings recording={selectedRecording} onSave={handleSaveEditedRecording} />
+          <TouchableWithoutFeedback onPress={() => setSelectedRecording(null)}>
+            <Animated.View style={styles.button}>
+              <Text style={styles.buttonText}>Close</Text>
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
       <StatusBar style="auto" />
     </View>
   );
@@ -222,16 +256,32 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 17,
     padding: 7,
   },
   recordingText: {
     color: '#293264',
-    fontSize: 20,
+    fontSize: 18,
     padding: 7,
   },
+  recordingTextView: {
+    width: '45%',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },  
   DeleteStyles: {
     backgroundColor: '#e34234',
+    borderRadius: 5,
+    marginRight: 10,
+    elevation: 5,
+    cursor: 'pointer',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 2
+  },
+  DetailsStyles: {
+    backgroundColor: '#008450',
     borderRadius: 5,
     marginRight: 10,
     elevation: 5,

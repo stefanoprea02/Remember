@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableWithoutFeedback, Animated, Modal, ScrollView } from 'react-native';
-import { doc, getDoc } from 'firebase/firestore';
+import { StyleSheet, Text, View, Image, TouchableWithoutFeedback, Animated, Modal, ScrollView, Button } from 'react-native';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './config';
 import { useAuth } from "../hooks/useAuth";
 import AddImage from '../components/AddImage';
-import Category from '../components/Category'
+import Category from '../components/Category';
+import { getStorage, ref, deleteObject } from '@firebase/storage';
+import MemorySettings from "../components/MemorySettings";
 
 export default function Memories() {
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [imageLinks, setImageLinks] = useState([]);
+  const [selectedMemory, setSelectedMemory] = useState(null);
+  const [images, setImages] = useState([]);
   const [addImage, setAddImage] = useState(false);
   const [user, setUser] = useState();
   const auth = useAuth();
@@ -24,26 +27,69 @@ export default function Memories() {
     setSelectedCategory(category);
   }
 
+  const addImageSet = (value) => {
+    setAddImage(value);
+  }
+
   React.useEffect(() => {
     async function fetchData(){
       const ref = doc(db, "users", user.uid);
       const docSnap = await getDoc(ref);
       if (docSnap.exists() && selectedCategory != '') {
-        setImageLinks(docSnap.data().categories[selectedCategory]);
+        setImages(docSnap.data().categories[selectedCategory]);
       }
     }
     if(selectedCategory != '')
       fetchData();
   }, [selectedCategory, addImage]);
 
-  const addImageSet = (value) => {
-    setAddImage(value);
+  async function saveToDB(updatedImages){
+    const ref = doc(db, "users", user.uid);
+    const docSnap = await getDoc(ref);
+    if (docSnap.exists()) {
+      let cat = docSnap.data().categories;
+      cat[selectedCategory] = updatedImages;
+
+      const prevUser = docSnap.data();
+      const a = await setDoc(doc(db, "users", user.uid),{
+        ...prevUser,
+        categories: cat
+      });
+    }
   }
 
-  let images = [];
-  if (imageLinks) {
-    images = imageLinks.map((link, index) => {
-      return <Image key={index} source={{ uri: link }} style={styles.logo} />
+  async function deleteImage(index){
+    const storage = getStorage();
+    const desertRef = ref(storage, `Memories/${user.uid}/${index}.image`);
+    deleteObject(desertRef);
+
+    const updatedImages = images.filter(function(item){
+      return item !== selectedMemory;
+    });
+    setImages(updatedImages);
+    setSelectedMemory(null);
+    saveToDB(updatedImages);
+  }
+
+  async function handleSaveEditedMemory(editedMemory){
+    if(editedMemory === null){
+      deleteImage(selectedMemory.id);
+    }else{
+      const updatedImages = images.map((image) => (image.id === editedMemory.id ? editedMemory : image));
+      setImages(updatedImages);
+      setSelectedMemory(null);
+      saveToDB(updatedImages);
+    }
+  }
+
+  let imgs = [];
+  if (images) {
+    imgs = images.map((img, index) => {
+      return (
+        <TouchableWithoutFeedback onPress={() => setSelectedMemory(img)} key={index}>
+          <Image source={{ uri: img.url }} style={styles.logo} />
+        </TouchableWithoutFeedback>
+      )
     });
   }
 
@@ -65,7 +111,7 @@ export default function Memories() {
             <View>
               <ScrollView>
                 <View style={styles.images}>
-                  {images}
+                  {imgs}
                 </View>
               </ScrollView>
               <View style={{flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap'}}>
@@ -85,6 +131,16 @@ export default function Memories() {
         </View>
       )
       }
+      {selectedMemory && (
+        <Modal visible={true} animationType="slide">
+          <MemorySettings memory={selectedMemory} onSave={handleSaveEditedMemory} />
+          <TouchableWithoutFeedback onPress={() => setSelectedMemory(null)}>
+            <Animated.View style={styles.button2}>
+              <Text style={styles.buttonText}>Close</Text>
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -92,10 +148,23 @@ export default function Memories() {
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      alignItems: 'center',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      alignItems: 'center'
     },
     button: {
+      //flex: 1,
+      backgroundColor: '#4D5B9E',
+      borderRadius: 5,
+      marginVertical: 5,
+      elevation: 5,
+      cursor: 'pointer',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+      width:'95%'
+    },
+    button2: {
       //flex: 1,
       backgroundColor: '#4D5B9E',
       borderRadius: 5,
@@ -105,12 +174,11 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: 5,
-      paddingVertical: 2,
-      width:'95%'
+      paddingVertical: 2
     },
     buttonText: {
       color: '#fff',
-      fontSize: 18,
+      fontSize: 17,
       padding: 7,
     },
     logo: {
