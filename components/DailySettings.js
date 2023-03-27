@@ -5,15 +5,22 @@ import { Dropdown } from "react-native-element-dropdown";
 
 export default function DailySettings({ daily, onSave }){
     const time = new Date().toISOString();
-    if(daily === undefined)
+    if(daily === undefined){
       daily = {
         id: '',
         title: '',
         notes: '',
         completed: time,
         timeUnit: 'Days',
-        timeValue: ''
+        timeValue: '',
+        notificationId: ''
       }
+    }else{
+      daily = {
+        ...daily,
+        completed: time
+      }
+    }
     const [dailySetting, setDailySetting] = useState(daily);
     const handleInputChange = (settingName, text) => {
       setDailySetting({...dailySetting, [settingName]: text});

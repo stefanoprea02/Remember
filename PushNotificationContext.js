@@ -40,7 +40,8 @@ export async function sendPushNotification(message) {
   });
   */
   export async function schedulePushNotification(data) {
-    await Notifications.scheduleNotificationAsync(data);
+    const id = await Notifications.scheduleNotificationAsync(data);
+    return id;
   }
 
 export default PushNotificationContext;

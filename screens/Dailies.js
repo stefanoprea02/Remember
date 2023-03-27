@@ -7,6 +7,7 @@ import { useAuth } from "../hooks/useAuth";
 import DailySettings from "../components/DailySettings";
 import PushNotificationContext from "../PushNotificationContext";
 import { sendPushNotification, schedulePushNotification } from "../PushNotificationContext";
+import * as Notifications from 'expo-notifications'
 
 export default function Dailies(){
     const [showSettings, setShowSettings] = useState(false);
@@ -24,9 +25,10 @@ export default function Dailies(){
       }
     }
 
-    function scheduleNotfication(item){
+    async function scheduleNotfication(item){
       const secs = getT(item);
-      schedulePushNotification({
+      console.log(secs);
+      const id = await schedulePushNotification({
         content: {
           to: expoPushToken,
           title: `You have a new daily to complete!`,
@@ -38,6 +40,7 @@ export default function Dailies(){
           channelId: 'default'
         },
       });
+      return id;
     }
 
     async function saveToDB(updatedDailies){
@@ -62,10 +65,11 @@ export default function Dailies(){
           dailySetting.id = dailies[dailies.length - 1].id + 1;
         }
       }
+      const id = await scheduleNotfication(dailySetting);
+      dailySetting.notificationId = id;
       const updatedDailies = [...dailies, dailySetting];
       setDailies(updatedDailies);
-      scheduleNotfication(dailySetting);
-      saveToDB(updatedDailies);
+      await saveToDB(updatedDailies);
       setShowSettings(false);
     };
 
@@ -74,33 +78,29 @@ export default function Dailies(){
         const updatedDailies = dailies.filter(function(item){
           return item !== selectedDaily;
         });
+        await Notifications.cancelScheduledNotificationAsync(selectedDaily.notificationId);
         setDailies(updatedDailies);
         setSelectedDaily(null);
-        saveToDB(updatedDailies);
+        await saveToDB(updatedDailies);
       }else{
+        await Notifications.cancelScheduledNotificationAsync(editedDaily.notificationId);
+        const id = await scheduleNotfication(editedDaily);
+        editedDaily.notificationId = id;
+        const time = new Date().toISOString();
+        editedDaily.completed = time;
         const updatedDailies = dailies.map((daily) => (daily.id === editedDaily.id ? editedDaily : daily));
         setDailies(updatedDailies);
         setSelectedDaily(null);
-        scheduleNotfication(editedDaily);
-        saveToDB(updatedDailies);
+        await saveToDB(updatedDailies);
       }
     }
 
     async function completeDaily(item){
       const time = new Date().toISOString();
-      const updatedDailies = dailies.map((daily) => (daily.id === item.id ? {...daily, completed: time} : daily));
+      const id = await scheduleNotfication(item);
+      const updatedDailies = dailies.map((daily) => (daily.id === item.id ? {...daily, completed: time, notificationId: id} : daily));
       setDailies(updatedDailies);
-      scheduleNotfication(item);
-
-      const ref = doc(db, "users", user.uid);
-      const docSnap = await getDoc(ref);
-      if (docSnap.exists()) {
-        const prevUser = docSnap.data();
-        const a = await setDoc(doc(db, "users", user.uid),{
-          ...prevUser,
-          dailies: updatedDailies
-        });
-      }
+      await saveToDB(updatedDailies)
     }
 
     function getT(item){

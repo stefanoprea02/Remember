@@ -1,7 +1,5 @@
 import React, {useState} from "react";
-import { Animated, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
-import { Dropdown } from "react-native-element-dropdown";
-
+import { Animated, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View, Image } from 'react-native';
 
 export default function MemorySettings({ memory, onSave }){
     if(memory === undefined)
@@ -24,6 +22,7 @@ export default function MemorySettings({ memory, onSave }){
   
     return (
       <View style={styles.containerModal}>
+        {memory.url && <Image source={{uri: memory.url}} style={{width: '90%' , height: '40%', marginBottom: 10}}/>}
         <View>
           <Text style={styles.Label}>Title</Text>
           <TextInput 

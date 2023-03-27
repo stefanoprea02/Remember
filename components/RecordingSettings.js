@@ -1,7 +1,5 @@
 import React, {useState} from "react";
 import { Animated, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
-import { Dropdown } from "react-native-element-dropdown";
-
 
 export default function RecordingSettings({ recording, onSave }){
     if(recording === undefined)
