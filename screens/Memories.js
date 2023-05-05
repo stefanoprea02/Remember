@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableWithoutFeedback, Animated, Modal, ScrollView, Button } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableWithoutFeedback, Animated, Modal, ScrollView, TouchableOpacity } from 'react-native';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './config';
 import { useAuth } from "../hooks/useAuth";
@@ -86,9 +86,9 @@ export default function Memories() {
   if (images) {
     imgs = images.map((img, index) => {
       return (
-        <TouchableWithoutFeedback onPress={() => setSelectedMemory(img)} key={index}>
+        <TouchableOpacity onPress={() => setSelectedMemory(img)} key={index}>
           <Image source={{ uri: img.url }} style={styles.logo} />
-        </TouchableWithoutFeedback>
+        </TouchableOpacity>
       )
     });
   }
@@ -96,9 +96,9 @@ export default function Memories() {
   return (
     <View style={styles.container}>
       {selectedCategory === '' ? (
-        <Modal visible={true} animationType="slide">
+          <>
           <Category onSave={handleSaveCategory} />
-        </Modal>
+          </>
       ) : (
         <View>
           {addImage === true ? (
@@ -115,16 +115,16 @@ export default function Memories() {
                 </View>
               </ScrollView>
               <View style={{flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap'}}>
-                <TouchableWithoutFeedback onPress={() => {setAddImage(true)}}>
+                <TouchableOpacity onPress={() => {setAddImage(true)}}>
                   <Animated.View style={styles.button}>
                     <Text style={styles.buttonText}>Add Image</Text>
                   </Animated.View>
-                </TouchableWithoutFeedback>
-                <TouchableWithoutFeedback onPress={() => {setSelectedCategory('')}}>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => {setSelectedCategory('')}}>
                   <Animated.View style={styles.button}>
                     <Text style={styles.buttonText}>Select Category</Text>
                   </Animated.View>
-                </TouchableWithoutFeedback>
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -134,11 +134,11 @@ export default function Memories() {
       {selectedMemory && (
         <Modal visible={true} animationType="slide">
           <MemorySettings memory={selectedMemory} onSave={handleSaveEditedMemory} />
-          <TouchableWithoutFeedback onPress={() => setSelectedMemory(null)}>
+          <TouchableOpacity onPress={() => setSelectedMemory(null)}>
             <Animated.View style={styles.button2}>
               <Text style={styles.buttonText}>Close</Text>
             </Animated.View>
-          </TouchableWithoutFeedback>
+          </TouchableOpacity>
         </Modal>
       )}
     </View>
@@ -153,38 +153,34 @@ const styles = StyleSheet.create({
     },
     button: {
       //flex: 1,
-      backgroundColor: '#4D5B9E',
-      borderRadius: 5,
-      marginVertical: 5,
-      elevation: 5,
+      backgroundColor: '#5B5A62',//'#4D5B9E',
+      paddingVertical: 5,
+      paddingHorizontal: 20,
+      borderRadius: 30,
+      margin: 10,
       cursor: 'pointer',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 5,
-      paddingVertical: 2,
-      width:'95%'
     },
     button2: {
       //flex: 1,
-      backgroundColor: '#4D5B9E',
-      borderRadius: 5,
+      backgroundColor: '#5B5A62',//'#4D5B9E',
+      paddingVertical: 5,
+      paddingHorizontal: 20,
+      borderRadius: 30,
       margin: 10,
-      elevation: 5,
       cursor: 'pointer',
-      justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 5,
-      paddingVertical: 2
     },
     buttonText: {
       color: '#fff',
       fontSize: 17,
       padding: 7,
+      fontWeight: '600',
     },
     logo: {
       width: 150,
       height: 150,
-      margin: 10
+      margin: 10,
+      borderRadius: 15,
     },
     images: {
       flexDirection: 'row',

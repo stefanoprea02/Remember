@@ -1,7 +1,8 @@
 import React, {useState} from "react";
-import { Animated, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
 import { Dropdown } from "react-native-element-dropdown";
-
+import { validText320, validNumber } from "../util/Validations";
+import InputError from "./InputError";
 
 export default function DailySettings({ daily, onSave }){
     const time = new Date().toISOString();
@@ -26,8 +27,17 @@ export default function DailySettings({ daily, onSave }){
       setDailySetting({...dailySetting, [settingName]: text});
     };
   
+    const [errors, setErrors] = useState(null);
+  
     const handleSave = () => {
-      onSave(dailySetting);
+      let errs = [];
+      errs.push(validText320(dailySetting.title, "Title"));
+      errs.push(validNumber(dailySetting.timeValue, "How often"));
+      errs = errs.filter(e => e !== undefined);
+      if(errs.length != 0)
+        setErrors(errs);
+      else
+        onSave(dailySetting);
     };
   
     const handleDelete = () => {
@@ -52,6 +62,7 @@ export default function DailySettings({ daily, onSave }){
             style={[styles.textBoxes, {height: 150}]}
             multiline={true}
           />
+        </View>
           <View style={styles.TimeStyles}>
           <View style={styles.TimeUnitStyles}>
             <Text style={styles.Label}>Time unit</Text>
@@ -82,18 +93,18 @@ export default function DailySettings({ daily, onSave }){
           />
           </View>
         </View>
-        </View>
+        {errors && <InputError errors={errors} key="Errors" />}
         <View style={styles.TimeStyles}>
-          <TouchableWithoutFeedback onPress={handleSave}>
+          <TouchableOpacity onPress={handleSave}>
             <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>Save</Text>
             </Animated.View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={handleDelete}>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleDelete}>
             <Animated.View style={styles.DeleteStyles}>
               <Text style={styles.buttonText}>Delete</Text>
             </Animated.View>
-          </TouchableWithoutFeedback>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -108,47 +119,43 @@ export default function DailySettings({ daily, onSave }){
     },
     button: {
       //flex: 1,
-      backgroundColor: '#4D5B9E',
-      borderRadius: 5,
+      backgroundColor: '#5B5A62',//'#4D5B9E',
+      paddingVertical: 5,
+      paddingHorizontal: 20,
+      borderRadius: 30,
       margin: 10,
-      elevation: 5,
       cursor: 'pointer',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 5,
-      paddingVertical: 2
     },
     DeleteStyles: {
-      backgroundColor: '#e34234',
-      borderRadius: 5,
+      backgroundColor: '#E68587',//'#e34234',
+      paddingVertical: 5,
+      paddingHorizontal: 20,
+      borderRadius: 30,
       margin: 10,
-      elevation: 5,
       cursor: 'pointer',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 5,
-      paddingVertical: 2
     },
     buttonText: {
       color: '#fff',
       fontSize: 18,
       padding: 7,
+      fontWeight: '600',
     },
     Label:{
-      color: '#4D5B9E',
+      color: '#918980',//'#4D5B9E',
       fontSize: 17,
       padding: 2,
-      fontWeight: 500
+      fontWeight: '700',
     },
     textBoxes: {
-      maxWidth: 350,
-      minWidth: 350,
+      maxWidth: "91%",
+      minWidth: "91%",
       fontSize: 18,
       padding: 12,
-      marginBottom: 10,
       borderColor: '#4D5B9E',
       borderWidth: 0.2,
-      textAlignVertical: "top"
+      borderRadius: 10,
+      marginBottom: 10,
+      textAlignVertical: 'top',
     },
     TimeStyles: {
       flexDirection: 'row',
@@ -159,14 +166,15 @@ export default function DailySettings({ daily, onSave }){
     },
     TimeValueInput: {
       fontSize: 18,
-      padding: 14,
+      padding: 11.75,
       marginBottom: 10,
       borderColor: '#4D5B9E',
       borderWidth: 0.2,
-      textAlignVertical: "top"
+      textAlignVertical: "top",
     },
     TimeUnitStyles: {
-      width: '60%'
+      width: '60%',
+      marginRight: 10,
     },
     PickerStyles: {
       fontSize: 18,

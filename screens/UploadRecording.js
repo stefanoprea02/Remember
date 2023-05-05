@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Audio } from 'expo-av';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Animated, ScrollView, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Animated, ScrollView, Modal, TouchableOpacity } from 'react-native';
 import { firebase, db } from './config';
 import { useAuth } from '../hooks/useAuth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -154,16 +154,16 @@ export default function UploadRecording() {
           <View style={styles.recordingTextView}>
             <Text style={styles.recordingText}>{record.title}</Text>
           </View>
-          <TouchableWithoutFeedback onPress={() => playAudio(record.id)}>
+          <TouchableOpacity onPress={() => playAudio(record.id)}>
             <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>Play</Text>
             </Animated.View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={() => setSelectedRecording(record)}>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setSelectedRecording(record)}>
             <Animated.View style={styles.DetailsStyles}>
               <Text style={styles.buttonText}>Details</Text>
             </Animated.View>
-          </TouchableWithoutFeedback>
+          </TouchableOpacity>
         </View>
       );
     })
@@ -208,19 +208,19 @@ export default function UploadRecording() {
           {records}
         </View>
       </ScrollView>
-      <TouchableWithoutFeedback onPress={recording ? stopRecording : startRecording}>
+      <TouchableOpacity onPress={recording ? stopRecording : startRecording}>
           <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>{recording ? 'Stop Recording' : 'Start Recording'}</Text>
           </Animated.View>
-      </TouchableWithoutFeedback>
+      </TouchableOpacity>
       {selectedRecording && (
         <Modal visible={true} animationType="slide">
           <RecordingSettings recording={selectedRecording} onSave={handleSaveEditedRecording} />
-          <TouchableWithoutFeedback onPress={() => setSelectedRecording(null)}>
+          <TouchableOpacity onPress={() => setSelectedRecording(null)}>
             <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>Close</Text>
             </Animated.View>
-          </TouchableWithoutFeedback>
+          </TouchableOpacity>
         </Modal>
       )}
       <StatusBar style="auto" />
@@ -239,15 +239,13 @@ const styles = StyleSheet.create({
   },
   button: {
     //flex: 1,
-    backgroundColor: '#4D5B9E',
-    borderRadius: 5,
+    backgroundColor: '#5B5A62',//'#4D5B9E',
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+    borderRadius: 30,
     margin: 10,
-    elevation: 5,
     cursor: 'pointer',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 2
   },
   row: {
     flexDirection: 'row',
@@ -258,37 +256,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     padding: 7,
+    fontWeight: '600',
   },
   recordingText: {
     color: '#293264',
     fontSize: 18,
     padding: 7,
+    fontWeight: '600',
   },
   recordingTextView: {
-    width: '45%',
+    width: '40%',
     justifyContent: 'center',
     alignItems: 'center'
-  },  
-  DeleteStyles: {
-    backgroundColor: '#e34234',
-    borderRadius: 5,
-    marginRight: 10,
-    elevation: 5,
-    cursor: 'pointer',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 2
-  },
+  }, 
   DetailsStyles: {
-    backgroundColor: '#008450',
-    borderRadius: 5,
-    marginRight: 10,
-    elevation: 5,
+    backgroundColor: '#BFB4A8',//'#008450'
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 30,
+    margin: 10,
     cursor: 'pointer',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 2
   },
 });

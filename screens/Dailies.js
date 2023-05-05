@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Animated, Dimensions, FlatList, Modal, Text, TouchableWithoutFeedback, View } from "react-native";
+import { Animated, Dimensions, FlatList, Modal, Text, TouchableWithoutFeedback, View, TouchableOpacity } from "react-native";
 import { StyleSheet } from "react-native";
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from './config';
@@ -27,7 +27,6 @@ export default function Dailies(){
 
     async function scheduleNotfication(item){
       const secs = getT(item);
-      console.log(secs);
       const id = await schedulePushNotification({
         content: {
           to: expoPushToken,
@@ -146,11 +145,11 @@ export default function Dailies(){
                 <Text style={styles.Notes}>{item.notes}</Text>
               </Animated.View>
             </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback onPress={() => completeDaily(item)}>
+            <TouchableOpacity onPress={() => completeDaily(item)}>
               <Animated.View style={styles.RightSide}>
                 <View style={styles.CompleteStyle}></View>
               </Animated.View>
-            </TouchableWithoutFeedback>
+            </TouchableOpacity>
           </View>
         )
       } else {
@@ -200,11 +199,11 @@ export default function Dailies(){
         />
   
         <View style={styles.buttonContainer}>
-          <TouchableWithoutFeedback onPress={() => setShowSettings(true)}>
+          <TouchableOpacity onPress={() => setShowSettings(true)}>
             <Animated.View style={styles.button}>
               <Text style={styles.buttonText}>Add Daily</Text>
             </Animated.View>
-          </TouchableWithoutFeedback>
+          </TouchableOpacity>
         </View>
   
         <Modal visible={showSettings} animationType="slide">
@@ -219,11 +218,11 @@ export default function Dailies(){
         {selectedDaily && (
           <Modal visible={true} animationType="slide">
             <DailySettings daily={selectedDaily} onSave={handleSaveEditedDaily} />
-            <TouchableWithoutFeedback onPress={() => setSelectedDaily(null)}>
+            <TouchableOpacity onPress={() => setSelectedDaily(null)}>
               <Animated.View style={styles.button}>
                 <Text style={styles.buttonText}>Close</Text>
               </Animated.View>
-            </TouchableWithoutFeedback>
+            </TouchableOpacity>
           </Modal>
         )}
       </View>
@@ -240,15 +239,17 @@ const styles = StyleSheet.create({
   },
   button: {
     //flex: 1,
-    backgroundColor: '#4D5B9E',
-    borderRadius: 5,
+    backgroundColor: '#5B5A62',//'#4D5B9E',
+    paddingVertical: 5,
+    paddingHorizontal: 50,
+    borderRadius: 30,
     margin: 10,
-    elevation: 5,
     cursor: 'pointer',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 2
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   DailyStyle:{
     flexDirection: 'row',
@@ -261,13 +262,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 1)',
     cursor: 'pointer',
     paddingLeft: 15,
-    paddingVertical: 10,
+    paddingVertical: 20,
     width: '70%',
     height: '100%',
     overflow: 'hidden'
   },
   RightSide: {
-    backgroundColor: '#4D5B9E',
+    backgroundColor: '#5B5A62',//'#4D5B9E',
     width: 70,
     height: '100%',
     justifyContent: 'center',
@@ -275,13 +276,13 @@ const styles = StyleSheet.create({
     cursor: 'pointer',
   },
   CompleteStyle:{
-    backgroundColor: '#7587e0',
+    backgroundColor: '#A8A7B5',//'#7587e0',
     width: 40,
     height: 40,
     borderRadius: 10
   },
   LeftSideComplete: {
-    backgroundColor: '#adb4d8',
+    backgroundColor: '#D3D1E3',//'#adb4d8',
     cursor: 'pointer',
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -292,12 +293,14 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 17,
-    padding: 7,
+    padding: 5,
+    fontWeight: '600',
   },
   Text: {
-    color: '#4D5B9E',
+    color: '#5B5A62',//'#4D5B9E',
     fontSize: 20,
     padding: 0,
+    fontWeight: '600',
   },
   Notes: {
     color: '#4D5B9E',
@@ -305,8 +308,9 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   Time: {
-    color: '#4D5B9E',
+    color: '#5B5A62',//'#4D5B9E',
     fontSize: 16,
     padding: 0,
+    fontWeight: '600',
   }
 });

@@ -37,6 +37,7 @@ export default function MemorySettings({ memory, onSave }){
             value={memorySetting.notes} 
             onChangeText={(notes) => handleInputChange('notes', notes)}
             style={[styles.textBoxes, {height: 150}]}
+            multiline={true}
           />
         </View>
         <View style={styles.TimeStyles}>
@@ -64,47 +65,44 @@ export default function MemorySettings({ memory, onSave }){
     },
     button: {
       //flex: 1,
-      backgroundColor: '#4D5B9E',
-      borderRadius: 5,
+      backgroundColor: '#5B5A62',//'#4D5B9E',
+      paddingVertical: 5,
+      paddingHorizontal: 20,
+      borderRadius: 30,
       margin: 10,
-      elevation: 5,
       cursor: 'pointer',
-      justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 5,
-      paddingVertical: 2
     },
     DeleteStyles: {
-      backgroundColor: '#e34234',
-      borderRadius: 5,
+      backgroundColor: '#E68587',//'#e34234',
+      paddingVertical: 5,
+      paddingHorizontal: 20,
+      borderRadius: 30,
       margin: 10,
-      elevation: 5,
       cursor: 'pointer',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 5,
-      paddingVertical: 2
     },
     buttonText: {
       color: '#fff',
       fontSize: 18,
       padding: 7,
+      fontWeight: '600',
     },
     Label:{
-      color: '#4D5B9E',
+      color: '#918980',//'#4D5B9E',
       fontSize: 17,
       padding: 2,
-      fontWeight: 500
+      fontWeight: '700',
     },
     textBoxes: {
-      maxWidth: 350,
-      minWidth: 350,
+      maxWidth: "91%",
+      minWidth: "91%",
       fontSize: 18,
       padding: 12,
-      marginBottom: 10,
       borderColor: '#4D5B9E',
       borderWidth: 0.2,
-      textAlignVertical: "top"
+      borderRadius: 10,
+      marginBottom: 10,
+      textAlignVertical: 'top',
     },
     TimeStyles: {
       flexDirection: 'row',

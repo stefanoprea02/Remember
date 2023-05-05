@@ -1,13 +1,36 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "react-navigation-stack";
+import { createAppContainer } from "react-navigation";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Feather from "react-native-vector-icons/Feather";
+import { View, Text, Button } from 'react-native';
 
-import Home from "../screens/Home";
+import Home from '../screens/Home';
 import SliderBar from "../screens/SliderBar";
 import Dailies from "../screens/Dailies";
 import Memories from "../screens/Memories";
 import UploadRecording from "../screens/UploadRecording";
+import CardMatching from '../screens/CardMatching';
+
+const navigator = createStackNavigator(
+  {
+    Home: Home,
+    Games: CardMatching,
+  },
+  {
+    initialRouteName: 'Home',
+    defaultNavigationOptions: {
+      headerShown: false,
+    },
+  }
+);
+
+const HomeStack = createAppContainer(navigator);
+
+const HomeStackScreen = () => {
+  return <HomeStack />
+}
 
 const Tab = createBottomTabNavigator();
 
@@ -22,13 +45,13 @@ export default function UserStack() {
           "tabBarLabelStyle": {
               "fontSize": 14,
               "fontWeight": "bold",
-              "marginBottom": 4
+              "marginBottom": 4,
           },
           "tabBarStyle": [
               {
                 "display": "flex",
                 "padding": 5,
-                "height": 55
+                "height": 55,
               },
               null
           ]
@@ -36,7 +59,7 @@ export default function UserStack() {
       >
         <Tab.Screen
           name="Home"
-          component={Home}
+          component={HomeStackScreen}
           options={{
             tabBarLabel: "Home",
             tabBarIcon: ({ color }) => (
